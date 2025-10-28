@@ -1,0 +1,53 @@
+# chaotic_image_encryption.py
+import numpy as np
+from PIL import Image
+
+def logistic_map(size, r=3.99, x0=0.5):
+    """
+    Generate a chaotic sequence using the Logistic Map
+    size: number of pixels
+    r: chaos parameter (0 < r <= 4)
+    x0: initial value (0 < x0 < 1)
+    """
+    x = x0
+    chaotic_seq = []
+    for _ in range(size):
+        x = r * x * (1 - x)
+        chaotic_seq.append(x)
+    return np.array(chaotic_seq)
+
+def encrypt_image(image_path, key=0.12345, output_path='encrypted.png'):
+    # Load the image
+    img = Image.open(image_path)
+    img_arr = np.array(img)
+    
+    # Generate chaotic sequence
+    h, w, c = img_arr.shape
+    chaotic_seq = logistic_map(h * w * c, x0=key)
+    chaotic_seq = (chaotic_seq * 255).astype(np.uint8).reshape(h, w, c)
+    
+    # Encrypt the image using XOR
+    encrypted_arr = np.bitwise_xor(img_arr, chaotic_seq)
+    encrypted_img = Image.fromarray(encrypted_arr)
+    encrypted_img.save(output_path)
+    print(f"Encrypted image saved at: {output_path}")
+
+def decrypt_image(encrypted_path, key=0.12345, output_path='decrypted.png'):
+    # Load the encrypted image
+    img = Image.open(encrypted_path)
+    img_arr = np.array(img)
+    
+    # Generate same chaotic sequence
+    h, w, c = img_arr.shape
+    chaotic_seq = logistic_map(h * w * c, x0=key)
+    chaotic_seq = (chaotic_seq * 255).astype(np.uint8).reshape(h, w, c)
+    
+    # Decrypt the image
+    decrypted_arr = np.bitwise_xor(img_arr, chaotic_seq)
+    decrypted_img = Image.fromarray(decrypted_arr)
+    decrypted_img.save(output_path)
+    print(f"Decrypted image saved at: {output_path}")
+
+# Example usage:
+# encrypt_image('input.png', key=0.54321)
+# decrypt_image('encrypted.png', key=0.54321)
